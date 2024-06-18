@@ -1,4 +1,3 @@
-
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
@@ -9,7 +8,7 @@ require("dotenv").config();
 puppeteer.use(StealthPlugin());
 
 const app = express();
-const port = process.env.port || 3001;
+const port = process.env.PORT || 3001;
 
 app.use(bodyParser.json());
 app.use(cors());
@@ -41,6 +40,9 @@ app.post("/scrape", async (req, res) => {
     const randomUserAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
     console.log(randomUserAgent);
 
+    // Set the environment variable for Puppeteer cache
+    process.env.PUPPETEER_CACHE_DIR = '/opt/render/.cache/puppeteer'; // Highlighted Change
+
     const browser = await puppeteer.launch({ headless: true });
     const page = await browser.newPage();
     await page.setUserAgent(randomUserAgent);
@@ -54,13 +56,13 @@ app.post("/scrape", async (req, res) => {
       articleElements.slice(0, 5).map(async (article) => {
         try {
           const title = await article.$eval("h2", (el) => el.innerText);
-          console.log("title->",title)
+          console.log("title->", title)
           const author = await article.$eval("p", (el) => el.innerText);
-          console.log("author->",author)
+          console.log("author->", author)
           const date = await article.$eval("span", (el) => (el.innerText).toString());
-          console.log("date->",date)
+          console.log("date->", date)
           const url = await article.$eval("a", (el) => el.href);
-          console.log("url->",url)
+          console.log("url->", url)
 
           return { title, author, date, url };
         } catch (err) {
@@ -68,7 +70,6 @@ app.post("/scrape", async (req, res) => {
           return null;
         }
       })
-      
     );
 
     const filteredArticles = articles.filter(article => article !== null);
